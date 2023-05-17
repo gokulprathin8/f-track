@@ -3,8 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <title>Title</title>
+  <link href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css" rel="stylesheet">
+
 </head>
 <body>
+    <div class="columns">
+      <div class="column">
 
+        <div class="" style="max-width: 50%; padding: 30px">
+
+          <div class="field">
+            <label class="label">Account name</label>
+            <div class="control">
+              <label>
+                <input class="input" type="text" placeholder="Name">
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Account type</label>
+            <div class="control">
+              <div class="select">
+                <select>
+                  <option value="0">Checking</option>
+                  <option value="1">Saving</option>
+                  <option value="2">Credit</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Account Balance </label>
+            <input class="input" type="number" placeholder="Balance" style="max-width: 40%">
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="column">
+        Second col
+      </div>
+    </div>
 </body>
 </html>
