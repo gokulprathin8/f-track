@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Set
+from typing import Set, List
 
 from beanie import Document, init_beanie, Link
 from bson import ObjectId
@@ -15,7 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
-
 
 origins = [
     "*"
@@ -79,6 +78,21 @@ class AccountsIn(BaseModel):
     balance: int
 
 
+class TransactionsOut(BaseModel):
+    id: str
+    trans_date: datetime
+    category: Categories
+    description: str
+    account: Accounts
+    amount: int
+
+
+@app.get("/categories")
+async def get_all_categories():
+    cat = await Categories.all().to_list()
+    return cat
+
+
 @app.post("/create_category")
 async def create_category(category: CreateCategoryIn):
     new_cat = Categories(
@@ -112,6 +126,12 @@ async def delete_category(category_id: str):
     # Delete the category
     await existing_cat.delete()
     return {"message": "Category deleted successfully"}
+
+
+@app.get("/transaction", response_model=List[TransactionsOut])
+async def transactions():
+    trans = await Transactions.all().to_list()
+    return trans
 
 
 @app.post("/create_transaction")
@@ -191,6 +211,7 @@ async def delete_account(account_id: str):
     await existing_account.delete()
     return {"message": "Account deleted successfully"}
 
+
 @app.on_event("startup")
 async def handle_startup():
     client = AsyncIOMotorClient("mongodb://localhost:27017")
@@ -200,3 +221,38 @@ async def handle_startup():
 @app.get("/home", response_class=HTMLResponse)
 async def homepage(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/search_transactions")
+async def search_transactions(
+        query: str, category: str = None, account: str = None, amount: int = None
+):
+    transaction_query = (
+        Transactions.join(Transactions.category, Categories)
+        .join(Transactions.account, Accounts)
+        .find()
+    )
+
+    if query:
+        transaction_query = transaction_query.search_text(query)
+    if category:
+        transaction_query = transaction_query.filter(category=ObjectId(category))
+    if account:
+        transaction_query = transaction_query.filter(account=ObjectId(account))
+    if amount:
+        transaction_query = transaction_query.filter(amount=amount)
+
+    # Execute the query and retrieve the matching transactions
+    transactions = await transaction_query.to_list()
+
+    return {"transactions": transactions}
+
+
+@app.get("/get_all_transactions")
+async def get_transactions():
+    transactions = await Transactions.join(Transactions.category, Categories).join(
+        Transactions.account, Accounts
+    ).find().to_list()
+
+    return {"transactions": transactions}
+
