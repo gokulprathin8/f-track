@@ -8,10 +8,12 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.0.1",
     "@remix-run/css-bundle": "^1.16.0",
     "@remix-run/node": "^1.16.0",
     "@remix-run/react": "^1.16.0",
     "@remix-run/serve": "^1.16.0",
+    "antd": "^5.5.0",
     "isbot": "^3.6.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
