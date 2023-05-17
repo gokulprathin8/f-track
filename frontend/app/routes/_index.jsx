@@ -8,12 +8,20 @@ import {
 } from '@ant-design/icons';
 import { Layout, Menu, Button, theme } from 'antd';
 import Accounts from "../components/accounts";
+import Categories from "../components/categories";
+import Transactions from "../components/transactions";
 export const meta = () => {
   return [{ title: "New Remix App" }];
 };
 
 const { Header, Sider, Content } = Layout;
 export default function Index() {
+    const [menuSelected, setMenuSelected] = useState(1);
+
+    const onClick = (e) => {
+        setMenuSelected(e['key']);
+        console.log('click ', e['key'], menuSelected);
+    };
 
   const [collapsed, setCollapsed] = useState(false);
   const {
@@ -25,6 +33,7 @@ export default function Index() {
       <Sider trigger={null} collapsible collapsed={collapsed}>
         <div className="demo-logo-vertical" />
         <Menu
+          onClick={onClick}
           theme="dark"
           mode="inline"
           defaultSelectedKeys={['1']}
@@ -68,7 +77,7 @@ export default function Index() {
             background: colorBgContainer,
           }}
         >
-          <Accounts />
+            <Categories />
         </Content>
       </Layout>
     </Layout>

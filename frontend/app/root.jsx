@@ -1,4 +1,5 @@
 import { cssBundleHref } from "@remix-run/css-bundle";
+import globalStyles from "../styles/global.css";
 
 import {
   Links,
@@ -10,7 +11,7 @@ import {
 } from "@remix-run/react";
 
 export const links = () => [
-  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }] : []),
+  ...(cssBundleHref ? [{ rel: "stylesheet", href: cssBundleHref }, { rel: 'stylesheet', href: globalStyles}] : []),
 ];
 
 export default function App() {

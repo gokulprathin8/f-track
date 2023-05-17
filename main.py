@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+from typing import Set
 
 from beanie import Document, init_beanie, Link
 from bson import ObjectId
@@ -9,10 +10,24 @@ from pydantic import BaseModel
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
+
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class CategoryType(int, Enum):
@@ -42,7 +57,6 @@ class Transactions(Document):
     category: Link[Categories]
     description: str
     account: Link[Accounts]
-    trans_type: AccountType
     amount: int
 
 
@@ -51,7 +65,6 @@ class TransactionsIn(BaseModel):
     category: Categories
     description: str
     account: Accounts
-    trans_type: AccountType
     amount: int
 
 
@@ -108,7 +121,6 @@ async def create_transaction(trans: TransactionsIn):
         category=trans.category.id,
         description=trans.description,
         account=trans.account.id,
-        trans_type=trans.trans_type,
         amount=trans.amount
     )
     await new_trans.insert()
@@ -124,7 +136,6 @@ async def update_transaction(trans_id: str, trans: TransactionsIn):
     existing_trans.category = trans.category.id
     existing_trans.description = trans.description
     existing_trans.account = trans.account.id
-    existing_trans.trans_type = trans.trans_type
     existing_trans.amount = trans.amount
     await existing_trans.replace()
     return {"message": "Transaction updated successfully"}
@@ -137,6 +148,12 @@ async def delete_transaction(trans_id: str):
         raise HTTPException(status_code=404, detail="Transaction not found")
     await existing_trans.delete()
     return {"message": "Transaction deleted successfully"}
+
+
+@app.get("/accounts")
+async def get_all_accounts():
+    accounts = await Accounts.all().to_list()
+    return accounts
 
 
 @app.post("/create_account")
@@ -153,29 +170,26 @@ async def create_account(account: AccountsIn):
 @app.put("/update_account/{account_id}")
 async def update_account(account_id: str, account: Accounts):
     # Fetch the existing account
-    existing_account = await Accounts.get_or_none(id=ObjectId(account_id))
-    if not existing_account:
+    acc = await Accounts.get(account_id)
+    if not acc:
         raise HTTPException(status_code=404, detail="Account not found")
+    acc.acc_type = account.acc_type
+    acc.name = account.name
+    acc.balance = account.balance
 
-    # Update the account fields
-    existing_account.name = account.name
-    existing_account.acc_type = account.acc_type
-    existing_account.balance = account.balance
-    await existing_account.replace()
+    await acc.replace()
     return {"message": "Account updated successfully"}
 
 
 @app.delete("/delete_account/{account_id}")
 async def delete_account(account_id: str):
-    # Fetch the existing account
-    existing_account = await Accounts.get_or_none(id=ObjectId(account_id))
+    existing_account = await Accounts.get(account_id)
     if not existing_account:
         raise HTTPException(status_code=404, detail="Account not found")
 
     # Delete the account
     await existing_account.delete()
     return {"message": "Account deleted successfully"}
-
 
 @app.on_event("startup")
 async def handle_startup():
